@@ -45,31 +45,6 @@ resource "aws_security_group_rule" "allow_http_port" {
   cidr_blocks       = local.all_ips
 }
 
-
-resource "aws_lb" "example" {
-  name               = "${var.cluster_name}-asg"
-  load_balancer_type = "application"
-  subnets            = data.aws_subnet_ids.default.ids
-  security_groups    = [aws_security_group.alb.id]
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.example.arn
-  port              = local.http_port
-  protocol          = "HTTP"
-
-  # By default, return a simple 404 page
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "404: page not found"
-      status_code  = 404
-    }
-  }
-}
-
 resource "aws_security_group" "alb" {
   name = "${var.cluster_name}-alb"
 }
@@ -93,9 +68,33 @@ resource "aws_security_group_rule" "allow_all_outbound" {
 }
 
 
+resource "aws_lb" "example" {
+  name               = "${var.cluster_name}-lb"
+  load_balancer_type = "application"
+  subnets            = data.aws_subnet_ids.default.ids
+  security_groups    = [aws_security_group.alb.id]
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.example.arn
+  port              = local.http_port
+  protocol          = "HTTP"
+
+  # By default, return a simple 404 page
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "404: page not found"
+      status_code  = 404
+    }
+  }
+}
+
 resource "aws_lb_target_group" "asg" {
-  name     = "${var.cluster_name}-asg"
-  port     = local.http_port
+  name     = "${var.cluster_name}-lb"
+  port     = var.server_port
   protocol = "HTTP"
   vpc_id   = data.aws_vpc.default.id
 

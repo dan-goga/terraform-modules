@@ -34,3 +34,9 @@ variable "max_size" {
   type        = number
 }
 
+variable "custom_tags" {
+  description = "Custom tag to set on the instances in the ASG"
+  type        = map(string)
+  default     = {}
+}
+
